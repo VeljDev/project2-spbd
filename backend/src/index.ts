@@ -11,8 +11,22 @@ import connectToDatabase from "./config/db";
 import authenticate from "./middleware/authenticate";
 import userRoutes from "./routes/user.route";
 import sessionRoutes from "./routes/session.route";
+import logger from "./config/logger";
 
 const app = express();
+
+logger.info("Starting Express server...");
+
+// Middleware to log each incoming request
+app.use((req, res, next) => {
+    logger.info("Incoming request", {
+        method: req.method,
+        url: req.url,
+        ip: req.ip,
+        headers: req.headers
+    });
+    next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -25,6 +39,7 @@ app.use(
 app.use(cookieParser());
 
 app.get("/",async (req, res, next) => {
+    logger.info("Health check endpoint hit");
     res.status(OK).json({
         status: "healthy"
     });
@@ -40,6 +55,13 @@ app.use("/sessions", authenticate, sessionRoutes);
 app.use(errorHandler);
 
 app.listen(PORT, async () => {
-    console.log(`Server is running on port ${PORT} in ${NODE_ENV} environment.`);
-    await connectToDatabase();
+    try {
+        await connectToDatabase();
+        logger.info(`Connected to database successfully`);
+    } catch (error: any) {
+        logger.error("Failed to connect to database", { error: error.message });
+        process.exit(1);
+    }
+
+    logger.info(`Server is running on port ${PORT} in ${NODE_ENV} environment`);
 });

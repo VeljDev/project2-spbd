@@ -23,12 +23,17 @@ const defaults: SignOptions = {
 };
 
 const accessTokenSignOptions: SignOptionsAndSecret = {
-    expiresIn: "15m",
+    expiresIn: "5m",
     secret: JWT_SECRET
 };
 
-export const refreshTokenSignOptions: SignOptionsAndSecret = {
+export const managerRefreshTokenSignOptions: SignOptionsAndSecret = {
     expiresIn: "30d",
+    secret: JWT_REFRESH_SECRET
+};
+
+export const regularUserRefreshTokenSignOptions: SignOptionsAndSecret = {
+    expiresIn: "5m",
     secret: JWT_REFRESH_SECRET
 };
 

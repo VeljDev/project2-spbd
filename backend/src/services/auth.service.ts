@@ -1,11 +1,11 @@
 import VerificationCodeType from "../constants/verificationCodeTypes";
-import { fiveMinutesAgo, ONE_DAY_MS, oneHourFromNow, oneYearFromNow, thirtyDaysFromNow } from "../utils/date";
+import { fiveMinutesAgo, oneHourFromNow, oneYearFromNow } from "../utils/date";
 import EmployeeModel from "../models/employee.model";
 import VerificationCodeModel from "../models/verificationCode.model";
 import SessionModel from "../models/session.models";
 import appAssert from "../utils/appAssert";
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND, TOO_MANY_REQUESTS, UNAUTHORIZED } from "../constants/http";
-import { RefreshTokenPayload, refreshTokenSignOptions, signToken, verifyToken } from "../utils/jwt";
+import { managerRefreshTokenSignOptions, RefreshTokenPayload, regularUserRefreshTokenSignOptions, signToken, verifyToken } from "../utils/jwt";
 import { sendMail } from "../utils/sendMail";
 import { getPasswordResetTemplate, getVerifyEmailTemplate } from "../utils/emailTemplates";
 import { APP_ORIGIN } from "../constants/env";
@@ -63,7 +63,7 @@ export const createAccount = async (data: CreateAccountParams) => {
     // sign access token & refresh token
     const refreshToken = signToken(
         { sessionId: session._id },
-        refreshTokenSignOptions
+        regularUserRefreshTokenSignOptions
     );
 
     const accessToken = signToken({ 
@@ -105,7 +105,7 @@ export const loginUser = async ({email, password, userAgent}: LoginParams) => {
     };
 
     // sign access & refresh tokens
-    const refreshToken = signToken(sessionInfo, refreshTokenSignOptions);
+    const refreshToken = signToken(sessionInfo, employee.IsManager ? managerRefreshTokenSignOptions : regularUserRefreshTokenSignOptions);
 
     const accessToken = signToken({ 
         ...sessionInfo,
@@ -124,7 +124,7 @@ export const refreshUserAccessToken = async (refreshToken: string) => {
     const {
         payload
     } = verifyToken<RefreshTokenPayload>(refreshToken, {
-        secret: refreshTokenSignOptions.secret
+        secret: regularUserRefreshTokenSignOptions.secret
     });
     appAssert(payload, UNAUTHORIZED, "Invalid refresh token");
 
@@ -136,29 +136,13 @@ export const refreshUserAccessToken = async (refreshToken: string) => {
         "Session expired"
     );
 
-    // refresh the session if it expires in th next 24 hours
-    const sessionNeedsRefresh = session.expiresAt.getTime() - now <= ONE_DAY_MS;
-    if(sessionNeedsRefresh) {
-        session.expiresAt = thirtyDaysFromNow();
-        await session.save();
-    }
-
-    const newRefreshToken = sessionNeedsRefresh 
-    ? signToken(
-        {
-        sessionId: session._id
-        },
-        refreshTokenSignOptions)
-    : undefined;
-
     const accessToken = signToken({
         employeeId: session.employeeId,
         sessionId: session._id
     });
 
     return {
-        accessToken,
-        newRefreshToken
+        accessToken
     };
 };
 

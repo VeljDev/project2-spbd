@@ -87,7 +87,7 @@ function Register() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 onKeyDown={
-                                    (e) => e.key === "Enter" && createAccount({ email, password, confirmPassword })
+                                    (e) => e.key === "Enter" && createAccount({ email, password, confirmPassword, firstName, lastName })
                                 }
                             />
                         </FormControl>
