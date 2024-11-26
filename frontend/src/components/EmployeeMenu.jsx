@@ -23,7 +23,8 @@ const EmployeeMenu = () => {
             <Avatar src="#" />
         </MenuButton>
         <MenuList>
-            <MenuItem onClick={() => navigate("/")}>Profile</MenuItem>
+            <MenuItem onClick={() => navigate("/")}>Customers</MenuItem>
+            <MenuItem onClick={() => navigate("/profile")}>Profile</MenuItem>
             <MenuItem onClick={() => navigate("/settings")}>Settings</MenuItem>
             <MenuItem onClick={signOut}>Logout</MenuItem>
         </MenuList>

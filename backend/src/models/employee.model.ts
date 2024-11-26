@@ -4,6 +4,7 @@ import { compareValue, hashValue } from "../utils/bcrypt";
 export interface EmployeeDocument extends mongoose.Document {
   Email: string;
   Password: string;
+  PasswordHistory: string[];
   Verified: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -22,12 +23,15 @@ export interface EmployeeDocument extends mongoose.Document {
   IsManager: boolean; // Boolean to indicate if the employee is a manager
   comparePassword(val: string): Promise<boolean>;
   omitPassword(): Omit<EmployeeDocument, "Password">;
+  isPasswordInHistory(val: string): Promise<boolean>;
+  addPasswordToHistory(val: string): Promise<void>;
 }
 
 const employeeSchema = new mongoose.Schema<EmployeeDocument>(
   {
     Email: { type: String, required: true, unique: true },
     Password: { type: String, required: true },
+    PasswordHistory: { type: [String], default: [] },
     Verified: { type: Boolean, required: true, default: false },
     FirstName: { type: String, required: true },
     LastName: { type: String, required: true },
@@ -53,7 +57,9 @@ employeeSchema.pre("save", async function (next) {
     return next();
   }
 
-  this.Password = await hashValue(this.Password);
+  const hashedPassword = await hashValue(this.Password);
+  this.Password = hashedPassword;
+  this.PasswordHistory.push(hashedPassword);
   return next();
 });
 
@@ -66,6 +72,24 @@ employeeSchema.methods.omitPassword = function () {
   delete employee.Password;
   return employee;
 };
+
+employeeSchema.methods.isPasswordInHistory = async function (val: string) {
+  for (const oldPasswordHash of this.PasswordHistory) {
+    const isMatch = await compareValue(val, oldPasswordHash);
+    if (isMatch) {
+      return true;
+    }
+  }
+  return false;
+}
+
+employeeSchema.methods.addPasswordToHistory = async function (hashedPassword: string) {
+  this.PasswordHistory.push(hashedPassword);
+  if(this.PasswordHistory.length > 5) {
+    this.PasswordHistory.shift();
+  }
+  await this.save();
+}
 
 const EmployeeModel = mongoose.model<EmployeeDocument>("Employee", employeeSchema, "employee");
 export default EmployeeModel;

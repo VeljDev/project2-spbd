@@ -4,7 +4,6 @@ import cors from "cors";
 import { APP_ORIGIN, NODE_ENV, PORT } from "./constants/env";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/errorHandler";
-import catchErrors from "./utils/catchErrors";
 import { OK } from "./constants/http";
 import authRoutes from "./routes/auth.route";
 import connectToDatabase from "./config/db";
@@ -12,6 +11,7 @@ import authenticate from "./middleware/authenticate";
 import userRoutes from "./routes/user.route";
 import sessionRoutes from "./routes/session.route";
 import logger from "./config/logger";
+import customerRoutes from "./routes/customer.route";
 
 const app = express();
 
@@ -51,6 +51,7 @@ app.use("/auth", authRoutes);
 // protected routes
 app.use("/user", authenticate, userRoutes);
 app.use("/sessions", authenticate, sessionRoutes);
+app.use("/customers", authenticate, customerRoutes);
 
 app.use(errorHandler);
 

@@ -10,4 +10,6 @@ export const resetPassword = async ({ verificationCode, password }) => API.post(
 
 export const getEmployee = async () => API.get("/user");
 export const getSessions = async () => API.get("/sessions");
-export const deleteSession = async(id) => API.delete(`/sessions/${id}`);
+export const deleteSession = async (id) => API.delete(`/sessions/${id}`);
+
+export const getCustomers = async () => API.get("/customers");

@@ -4,7 +4,7 @@ import EmployeeModel from "../models/employee.model";
 import VerificationCodeModel from "../models/verificationCode.model";
 import SessionModel from "../models/session.models";
 import appAssert from "../utils/appAssert";
-import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND, TOO_MANY_REQUESTS, UNAUTHORIZED } from "../constants/http";
+import { BAD_REQUEST, CONFLICT, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, TOO_MANY_REQUESTS, UNAUTHORIZED } from "../constants/http";
 import { managerRefreshTokenSignOptions, RefreshTokenPayload, regularUserRefreshTokenSignOptions, signToken, verifyToken } from "../utils/jwt";
 import { sendMail } from "../utils/sendMail";
 import { getPasswordResetTemplate, getVerifyEmailTemplate } from "../utils/emailTemplates";
@@ -34,7 +34,8 @@ export const createAccount = async (data: CreateAccountParams) => {
         LastName: data.lastName
     });
     const employeeId = employee._id;
-    
+
+
     // create verification code
     const verificationCode = await VerificationCodeModel.create({
         employeeId,
@@ -233,13 +234,23 @@ export const resetPassword = async (
     appAssert(validCode, NOT_FOUND, "Invalid or expired verification code");
 
     // update the users password
+    const employee = await EmployeeModel.findById(validCode.employeeId);
+    appAssert(employee, NOT_FOUND, "Employee not found");
+
+    const isPasswordInHistory = await employee.isPasswordInHistory(password);
+    appAssert(!isPasswordInHistory, FORBIDDEN, "Password cannot be the same as the last 5 passwords");
+
+    const hashedPassword = await hashValue(password);
     const updatedEmployee = await EmployeeModel.findByIdAndUpdate(
         validCode.employeeId,
         {
-            Password: await hashValue(password)
+            Password: hashedPassword
         } 
     );
     appAssert(updatedEmployee, INTERNAL_SERVER_ERROR, "Failed to reset password");
+
+    // Add password to history
+    await updatedEmployee.addPasswordToHistory(hashedPassword);
 
     // delete the verification code
     await validCode.deleteOne();

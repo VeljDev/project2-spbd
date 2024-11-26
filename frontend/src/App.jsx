@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import queryClient from "./config/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { logout } from "./lib/api";
+import Customers from "./pages/Customers";
 
 
 function App() {
@@ -57,7 +58,8 @@ function App() {
 
   return <Routes>
     <Route path="/" element={<AppContainer />} >
-      <Route index element={<Profile />} />
+      <Route index element={<Customers />} />
+      <Route path="profile" element={<Profile />} />
       <Route path="settings" element={<Settings />} />
     </Route>
     <Route path="/login" element={<Login />} />

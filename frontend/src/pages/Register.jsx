@@ -77,7 +77,19 @@ function Register() {
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                             <Text color="text.muted" fontSize="xs" textAlign="left" mt={2}>
-                                - Must be at least 6 characters long.
+                                - Must be between 6 to 14 characters long.
+                            </Text>
+                            <Text color="text.muted" fontSize="xs" textAlign="left" mt={2}>
+                                - Must include at least one uppercase letter (A-Z).
+                            </Text>
+                            <Text color="text.muted" fontSize="xs" textAlign="left" mt={2}>
+                                - Must include at least one lowercase letter (a-z).
+                            </Text>
+                            <Text color="text.muted" fontSize="xs" textAlign="left" mt={2}>
+                                - Must include at least one number (0-9).
+                            </Text>
+                            <Text color="text.muted" fontSize="xs" textAlign="left" mt={2}>
+                                - Must include at least one special character (e.g., !, @, #, $, %).
                             </Text>
                         </FormControl>
                         <FormControl id="confirmPassword">
