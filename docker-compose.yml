@@ -1,0 +1,54 @@
+name: project2-spbd
+
+services:
+  mongo:
+    image: mongo:8.0.3
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+      - ./dump:/dump
+      - ./seed:/docker-entrypoint-initdb.d
+    networks:
+      - project2-spbd
+    
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - logs:/app/logs
+    networks:
+      - project2-spbd
+    ports:
+      - 4004:4004
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./frontend/.env
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - project2-spbd
+    ports:
+      - 5173:5173
+    command: npm run dev -- --host
+    depends_on:
+      - api
+
+volumes:
+  logs:
+  mongo_data:
+networks:
+  project2-spbd:
+    driver: bridge

@@ -1,5 +1,6 @@
 import { createLogger, format, transports } from "winston";
 import path from "path";
+import os from "os";
 
 // Define custom format for more readable logs
 const customFormat = format.printf(({ level, message, timestamp, stack, ...meta }) => {
@@ -22,12 +23,12 @@ const logger = createLogger({
       format: format.combine(format.colorize(), customFormat) // Colorized output for console
     }),
     new transports.File({
-      filename: path.join(__dirname, "../logs/error.log"),
+      filename: path.join("/app", "logs", "error.log"),
       level: "error", // Only log errors to error.log
       format: format.combine(format.timestamp(), customFormat)
     }),
     new transports.File({
-      filename: path.join(__dirname, "../logs/combined.log"),
+      filename: path.join("/app", "logs", "combined.log"),
       format: format.combine(format.timestamp(), customFormat)
     })
   ]
