@@ -12,6 +12,8 @@ import userRoutes from "./routes/user.route";
 import sessionRoutes from "./routes/session.route";
 import logger from "./config/logger";
 import customerRoutes from "./routes/customer.route";
+import rateLimit from "express-rate-limit";
+import slowDown from "express-slow-down";
 
 const app = express();
 
@@ -23,10 +25,25 @@ app.use((req, res, next) => {
         method: req.method,
         url: req.url,
         ip: req.ip,
-        headers: req.headers
+        headers: req.headers["user-agent"]
     });
     next();
 });
+
+// Rate limiting middleware
+const rateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res, next, options) => {
+        logger.warn(`IP ${req.ip} has been rate-limited.`);
+        res.status(options.statusCode).json({
+            error: "Too many requests from this IP. Please try again later.",
+        });
+    },
+});
+app.use(rateLimiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

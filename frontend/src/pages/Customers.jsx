@@ -1,4 +1,21 @@
-import { Alert, AlertIcon, Box, Button, Center, Heading, HStack, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr } from "@chakra-ui/react";
+import {
+    Alert,
+    AlertIcon,
+    Box,
+    Button,
+    Center,
+    Flex,
+    Heading,
+    Input,
+    Spinner,
+    Table,
+    TableContainer,
+    Tbody,
+    Td,
+    Th,
+    Thead,
+    Tr,
+} from "@chakra-ui/react";
 import useCustomers from "../hooks/useCustomers";
 import { useState } from "react";
 
@@ -7,6 +24,24 @@ const Customers = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 10; // Number of rows per page
+
+    // States for filtering
+    const [filters, setFilters] = useState({
+        FirstName: "",
+        LastName: "",
+        Email: "",
+        Phone: "",
+        City: "",
+    });
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+        setCurrentPage(1); // Reset to first page when filters change
+    };
 
     if (isLoading) {
         return (
@@ -28,7 +63,7 @@ const Customers = () => {
         );
     }
 
-    if (customers.length == 0) {
+    if (customers.length === 0) {
         return (
             <Center mt={16} flexDir="column">
                 <Heading mb={4}>My Customers</Heading>
@@ -40,11 +75,22 @@ const Customers = () => {
         );
     }
 
+    // Apply filters to customers
+    const filteredCustomers = customers.filter((customer) => {
+        return (
+            (!filters.FirstName || customer.FirstName.toLowerCase().includes(filters.FirstName.toLowerCase())) &&
+            (!filters.LastName || customer.LastName.toLowerCase().includes(filters.LastName.toLowerCase())) &&
+            (!filters.Email || customer.Email.toLowerCase().includes(filters.Email.toLowerCase())) &&
+            (!filters.Phone || customer.Phone?.toLowerCase().includes(filters.Phone.toLowerCase())) &&
+            (!filters.City || customer.City?.toLowerCase().includes(filters.City.toLowerCase()))
+        );
+    });
+
     // Calculate pagination data
-    const totalPages = Math.ceil(customers.length / rowsPerPage);
+    const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage);
     const indexOfLastRow = currentPage * rowsPerPage;
     const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-    const currentRows = customers.slice(indexOfFirstRow, indexOfLastRow);
+    const currentRows = filteredCustomers.slice(indexOfFirstRow, indexOfLastRow);
 
     const handleNextPage = () => {
         setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -57,6 +103,47 @@ const Customers = () => {
     return (
         <Center mt={16} flexDir="column">
             <Heading mb={4}>My Customers</Heading>
+
+            {/* Filter inputs with responsive layout */}
+            <Flex
+                direction={{ base: "column", md: "row" }}
+                w="90%"
+                gap={4}
+                mb={4}
+            >
+                <Input
+                    placeholder="Filter by First Name"
+                    name="FirstName"
+                    value={filters.FirstName}
+                    onChange={handleFilterChange}
+                />
+                <Input
+                    placeholder="Filter by Last Name"
+                    name="LastName"
+                    value={filters.LastName}
+                    onChange={handleFilterChange}
+                />
+                <Input
+                    placeholder="Filter by Email"
+                    name="Email"
+                    value={filters.Email}
+                    onChange={handleFilterChange}
+                />
+                <Input
+                    placeholder="Filter by Phone"
+                    name="Phone"
+                    value={filters.Phone}
+                    onChange={handleFilterChange}
+                />
+                <Input
+                    placeholder="Filter by City"
+                    name="City"
+                    value={filters.City}
+                    onChange={handleFilterChange}
+                />
+            </Flex>
+
+            {/* Table */}
             <TableContainer w="90%">
                 <Table variant="striped" size="md">
                     <Thead>
@@ -81,6 +168,8 @@ const Customers = () => {
                     </Tbody>
                 </Table>
             </TableContainer>
+
+            {/* Pagination */}
             <Box mt={4} display="flex" alignItems="center">
                 <Button onClick={handlePreviousPage} isDisabled={currentPage === 1} mr={2}>
                     Previous
@@ -95,4 +184,5 @@ const Customers = () => {
         </Center>
     );
 };
+
 export default Customers;
